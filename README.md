@@ -7,7 +7,7 @@ Premium fashion e-commerce. React + Vite storefront, Express + TypeScript API, S
 ```
 backend/    Express 5 API (TypeScript, CommonJS) - port 5000
 frontend/   Vite 8 + React 19 + Tailwind 4 SPA    - port 5173
-supabase_schema.sql
+supabase/   CLI config + migrations
 ```
 
 ## Prerequisites
@@ -17,8 +17,36 @@ supabase_schema.sql
 
 ## Database setup
 
+The schema lives at `supabase/migrations/20260926000000_initial_schema.sql`
+(16 tables). Pick one of the two routes below.
+
+### Local Supabase (needs Docker Desktop)
+
+Full local stack: Postgres, Auth, Storage, and Studio at
+http://127.0.0.1:54323. The CLI is already installed, so once Docker Desktop
+is running:
+
+```bash
+supabase start          # first run pulls several GB of images
+supabase status
+```
+
+Migrations apply automatically on `start`. To reset to a clean state after
+editing a migration:
+
+```bash
+supabase db reset
+supabase stop
+```
+
+`supabase start` prints the local API URL and anon / service-role keys. Copy
+them into the two `.env` files below.
+
+### Hosted Supabase
+
 1. Create a project at https://supabase.com/dashboard
-2. SQL Editor -> paste all of `supabase_schema.sql` -> Run. Creates 16 tables.
+2. SQL Editor -> New query -> paste the whole migration file -> Run
+3. Table Editor should then list all 16 tables
 
 ## Environment
 
