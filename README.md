@@ -18,7 +18,8 @@ supabase/   CLI config + migrations
 ## Database setup
 
 The schema lives at `supabase/migrations/20260926000000_initial_schema.sql`
-(16 tables). Pick one of the two routes below.
+(18 tables), hardened by `20260926000100_hardening.sql`. Pick one of the two
+routes below.
 
 ### Local Supabase (needs Docker Desktop)
 
@@ -31,22 +32,40 @@ supabase start          # first run pulls several GB of images
 supabase status
 ```
 
-Migrations apply automatically on `start`. To reset to a clean state after
-editing a migration:
+Migrations apply automatically on `start`. To load the sample catalogue
+(5 categories, 14 products, 36 variants, 7 delivery areas):
 
 ```bash
-supabase db reset
+psql "$DB_URL" -f supabase/seed.sql   # or paste into Studio's SQL editor
+```
+
+The seed is idempotent, so re-running it will not duplicate rows. To reset to a
+clean state after editing a migration:
+
+```bash
+supabase db reset   # re-applies migrations, then re-runs seed.sql if present
 supabase stop
 ```
 
 `supabase start` prints the local API URL and anon / service-role keys. Copy
 them into the two `.env` files below.
 
+Local-only credentials, safe for `.env` but **never** for production:
+
+| Variable | Local value |
+| --- | --- |
+| `SUPABASE_URL` / `VITE_SUPABASE_URL` | `http://127.0.0.1:54321` |
+| `SUPABASE_ANON_KEY` / `VITE_SUPABASE_ANON_KEY` | the `ANON_KEY` from `supabase status` |
+| `SUPABASE_SERVICE_ROLE_KEY` | the `SERVICE_ROLE_KEY` from `supabase status` |
+
+Restart the backend after editing `backend/.env`; nodemon only watches
+`backend/src`.
+
 ### Hosted Supabase
 
 1. Create a project at https://supabase.com/dashboard
 2. SQL Editor -> New query -> paste the whole migration file -> Run
-3. Table Editor should then list all 16 tables
+3. Table Editor should then list all 18 tables
 
 ## Environment
 
