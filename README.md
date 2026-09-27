@@ -130,17 +130,50 @@ Then set `VITE_API_URL` on the Vercel project to the Render URL and redeploy.
 `.github/workflows/ci.yml` runs backend typecheck + build and frontend lint +
 build on every push and PR to `main`.
 
+## API
+
+All routes are prefixed `/api`. Errors return `{ "error": string }`.
+
+| Method | Route | Auth | Purpose |
+| --- | --- | --- | --- |
+| GET | `/health` | - | Liveness plus a real query against `settings` |
+| GET | `/categories` | - | Categories with product counts |
+| GET | `/products` | - | Paginated active products. `category` (slug), `featured`, `new`, `search`, `page`, `limit` (max 60) |
+| GET | `/products/:slug` | - | One product with images, variants, and rating summary |
+| GET | `/delivery-areas` | - | Delivery areas and fees |
+| GET | `/settings` | - | Public store settings |
+| POST | `/orders` | optional | Create an order |
+
+`POST /orders` takes `{ items: [{ productId, variantId?, quantity }], deliveryAreaId?, deliveryAddress?, voucherCode?, paymentMethod? }` and is the only write path from the client.
+
+Totals are recomputed server-side from the database. Prices, discounts, delivery
+fees and stock in the request body are ignored, because a browser can send
+anything. The service-role client reads the products, applies the voucher rules,
+writes the order, then decrements variant stock. A failed line insert rolls the
+order row back.
+
+Auth uses Supabase Auth. Send `Authorization: Bearer <access token>` from
+`supabase.auth.getSession()`. Tokens are verified with `auth.getUser`, and
+`requireAdmin` additionally checks the `admins` table.
+
 ## Project status
 
-The storefront UI is still the stock Vite template and the API exposes only
-`/api/health`. Schema and infrastructure are in place; routes, auth, and the
-catalogue UI are not built yet.
+No database is connected yet, so nothing has run against real data. What exists:
 
-### Known schema gaps
+- Schema, with a second migration for RLS, triggers, indexes and constraints
+- API: health, categories, products, delivery areas, settings, orders
+- Storefront: home, catalogue with filters and pagination, product detail,
+  cart, WhatsApp checkout, four themes, 404
 
-Not yet addressed in `supabase_schema.sql`:
+Not built: customer accounts and wishlists, admin UI, payment gateway,
+product/variant management, order tracking, review submission.
 
-- No row level security policies. Required before any real data goes in.
-- No `updated_at` triggers, so `products` / `orders` timestamps go stale.
-- No indexes on foreign key or frequently filtered columns.
-- `settings` has no constraint enforcing a single row.
+## Security notes
+
+- RLS is on for all 18 tables. The browser uses the anon key, so RLS is the only
+  barrier between a leaked key and the database.
+- Orders, customers, vouchers and referrals have no client insert policy by
+  design. Only the service-role key can write them, which is what keeps order
+  totals honest.
+- `SUPABASE_SERVICE_ROLE_KEY` must never reach a `VITE_` variable. Vite inlines
+  those into the client bundle.
