@@ -33,17 +33,31 @@ supabase status
 ```
 
 Migrations apply automatically on `start`. To load the sample catalogue
-(5 categories, 14 products, 36 variants, 7 delivery areas):
+(5 categories, 14 products, 36 variants, 7 delivery areas), open the SQL editor
+at http://127.0.0.1:54323 and paste `supabase/seed.sql`, or run it through the
+container's `psql`:
 
-```bash
-psql "$DB_URL" -f supabase/seed.sql   # or paste into Studio's SQL editor
+```powershell
+# Windows PowerShell - psql only exists inside the container, not on your PATH
+$env:PATH = "C:\Program Files\Docker\Docker\resources\bin;" + $env:PATH
+Get-Content supabase/seed.sql -Raw |
+  docker exec -i supabase_db_COCO_ psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f -
 ```
 
-The seed is idempotent, so re-running it will not duplicate rows. To reset to a
-clean state after editing a migration:
+```bash
+# macOS / Linux
+docker exec -i supabase_db_COCO_ psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+  < supabase/seed.sql
+```
+
+The seed is idempotent, so re-running it will not duplicate rows. Note that
+`supabase db reset` already runs `seed.sql` for you, so seeding again after a
+reset is unnecessary.
+
+To reset to a clean state after editing a migration:
 
 ```bash
-supabase db reset   # re-applies migrations, then re-runs seed.sql if present
+supabase db reset   # re-applies migrations and re-runs seed.sql
 supabase stop
 ```
 
