@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchCategories, fetchProducts, type Category, type Product } from '../lib/api'
 import { ProductCard } from '../components/ProductCard'
+import { BathroomBeddingPromo } from '../components/BathroomBeddingPromo'
 
 export function Home() {
   const [featured, setFeatured] = useState<Product[]>([])
@@ -49,6 +50,8 @@ export function Home() {
           Shop the collection
         </Link>
       </section>
+
+      <BathroomBeddingPromo />
 
       {error && (
         <p className="rounded border border-theme-accent/40 bg-theme-accent/10 p-4 text-sm">
